@@ -14,7 +14,7 @@ export default defineConfig({
         name: 'Menú de hoy',
         short_name: 'Menú de hoy',
         description:
-          'Decide qué comer o cenar con tus recetas, guarda tus notas y cocina paso a paso con temporizadores.',
+          'Decide qué comer o cenar, planifica la semana, calcula la compra y cocina paso a paso.',
         lang: 'es',
         start_url: '.',
         scope: '.',

@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Menú de hoy, una app para decidir qué comer o cenar y cocinarlo paso a paso.",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

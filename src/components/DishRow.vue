@@ -1,6 +1,7 @@
 <script setup>
 import { effortLabel } from '../lib/format'
 import { isFavorite, ratingOf, toggleFavorite } from '../lib/store'
+import DishArt from './DishArt.vue'
 import HeartIcon from './HeartIcon.vue'
 
 defineProps({
@@ -11,8 +12,19 @@ defineProps({
 <template>
   <article class="row">
     <RouterLink class="row__link" :to="{ name: 'receta', params: { id: dish.id } }">
-      <span class="row__name">{{ dish.name }}</span>
-      <span class="row__meta">{{ dish.mins }} min, {{ effortLabel(dish.effort).toLowerCase() }}</span>
+      <img
+        v-if="dish.image"
+        class="row__art"
+        :src="dish.image"
+        alt=""
+        loading="lazy"
+        referrerpolicy="no-referrer"
+      />
+      <DishArt v-else class="row__art" :dish="dish" variant="thumb" />
+      <span class="row__text">
+        <span class="row__name">{{ dish.name }}</span>
+        <span class="row__meta">{{ dish.mins }} min, {{ effortLabel(dish.effort).toLowerCase() }}</span>
+      </span>
     </RouterLink>
     <div class="row__side">
       <span v-if="ratingOf(dish.id)" class="row__note">

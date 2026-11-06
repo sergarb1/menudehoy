@@ -1,6 +1,21 @@
 import { reactive, watch } from 'vue'
+import { defaultPantry } from './pantry'
+import { WEEK_DAYS, emptyPlan } from './week'
 
 const KEY = 'sarten:v1'
+
+function savedPlan(value) {
+  const base = emptyPlan()
+  if (!value || typeof value !== 'object') return base
+  for (const day of WEEK_DAYS) {
+    const entry = value[day.id]
+    if (!entry || typeof entry !== 'object') continue
+    for (const slot of ['comida', 'cena']) {
+      base[day.id][slot] = typeof entry[slot] === 'string' ? entry[slot] : null
+    }
+  }
+  return base
+}
 
 function defaults() {
   return {
@@ -8,7 +23,11 @@ function defaults() {
     ratings: {},
     cooked: {},
     progress: {},
-    prefs: { maxMins: 40, effort: 'normal', veggie: false },
+    pantry: defaultPantry(),
+    imported: [],
+    servings: 2,
+    plan: emptyPlan(),
+    prefs: { maxMins: 40, effort: 'normal', veggie: false, favOnly: false },
     lastPick: null,
   }
 }
@@ -27,6 +46,12 @@ function read() {
       ratings: saved.ratings && typeof saved.ratings === 'object' ? saved.ratings : {},
       cooked: saved.cooked && typeof saved.cooked === 'object' ? saved.cooked : {},
       progress: saved.progress && typeof saved.progress === 'object' ? saved.progress : {},
+      pantry: Array.isArray(saved.pantry) ? saved.pantry : defaultPantry(),
+      imported: Array.isArray(saved.imported)
+        ? saved.imported.filter((recipe) => recipe && recipe.id && recipe.name)
+        : [],
+      servings: Math.min(6, Math.max(1, Number(saved.servings) || 2)),
+      plan: savedPlan(saved.plan),
       prefs: { ...base.prefs, ...(saved.prefs ?? {}) },
     }
   } catch {
@@ -93,6 +118,47 @@ export function progressOf(id) {
 
 function toggled(list, index) {
   return list.includes(index) ? list.filter((item) => item !== index) : [...list, index]
+}
+
+export function isInPantry(id) {
+  return state.pantry.includes(id)
+}
+
+export function togglePantry(id) {
+  state.pantry = isInPantry(id)
+    ? state.pantry.filter((item) => item !== id)
+    : [...state.pantry, id]
+}
+
+export function setPantry(ids) {
+  state.pantry = [...new Set(ids)]
+}
+
+export function clearPantry() {
+  state.pantry = []
+}
+
+export function setServings(value) {
+  state.servings = Math.min(6, Math.max(1, Number(value) || 2))
+}
+
+export function setPlanSlot(day, slot, id) {
+  if (!state.plan[day]) state.plan[day] = { comida: null, cena: null }
+  state.plan[day][slot] = id || null
+}
+
+export function clearPlan() {
+  state.plan = emptyPlan()
+}
+
+export function addImported(recipe) {
+  if (!recipe || state.imported.some((item) => item.id === recipe.id)) return false
+  state.imported = [...state.imported, recipe]
+  return true
+}
+
+export function removeImported(id) {
+  state.imported = state.imported.filter((recipe) => recipe.id !== id)
 }
 
 export function toggleIngredient(id, index) {

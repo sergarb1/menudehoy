@@ -1,4 +1,5 @@
 import { daysSince } from './format'
+import { pantryStatus } from './pantry'
 
 const EFFORT_MAX = { poca: 1, normal: 2, mucha: 3 }
 
@@ -6,14 +7,17 @@ export function effortFits(dish, effort) {
   return dish.effort <= (EFFORT_MAX[effort] ?? 3)
 }
 
-export function pool(dishes, prefs) {
-  return dishes.filter(
-    (dish) =>
-      dish.mins <= prefs.maxMins && effortFits(dish, prefs.effort) && (!prefs.veggie || dish.veg),
-  )
+export function pool(dishes, prefs, favorites = []) {
+  return dishes.filter((dish) => {
+    if (dish.mins > prefs.maxMins) return false
+    if (!effortFits(dish, prefs.effort)) return false
+    if (prefs.veggie && !dish.veg) return false
+    if (prefs.favOnly && !favorites.includes(dish.id)) return false
+    return true
+  })
 }
 
-function weightOf(dish, state, hour) {
+function baseWeight(dish, state, hour) {
   let weight = 1
 
   const rating = state.ratings[dish.id] ?? 0
@@ -42,9 +46,19 @@ function weightOf(dish, state, hour) {
   if (hour >= 21 && dish.mins <= 25) weight *= 1.6
   if (hour >= 22 && dish.mins >= 35) weight *= 0.4
 
-  // Un poco de azar para que dos días iguales no den la misma comida.
-  weight *= 0.85 + Math.random() * 0.3
+  // Lo que hay en la despensa pesa de verdad, pero no bloquea una receta.
+  const pantry = pantryStatus(dish, state.pantry)
+  if (pantry.total) {
+    if (pantry.ready) weight *= 2.4
+    else weight *= 0.8 + pantry.ratio
+  }
+
   return Math.max(weight, 0.02)
+}
+
+function weightOf(dish, state, hour) {
+  // Un poco de azar para que dos días iguales no den la misma comida.
+  return baseWeight(dish, state, hour) * (0.85 + Math.random() * 0.3)
 }
 
 export function explain(dish, state, hour = new Date().getHours()) {
@@ -61,6 +75,18 @@ export function explain(dish, state, hour = new Date().getHours()) {
     if (days !== null && days >= 7) reasons.push(`Hace ${days} días que no la comes.`)
   }
 
+  const pantry = pantryStatus(dish, state.pantry)
+  if (pantry.ready) {
+    reasons.push('Tienes todo lo que pide.')
+  } else if (pantry.have.length && pantry.total) {
+    const first = pantry.missing[0]?.label?.toLowerCase()
+    reasons.push(
+      first
+        ? `Tienes ${pantry.have.length} de ${pantry.total}; te falta ${first}.`
+        : `Tienes ${pantry.have.length} de ${pantry.total}.`,
+    )
+  }
+
   if (state.prefs.veggie && dish.veg) reasons.push('Vegetariana, como pediste.')
   if (hour >= 21 && dish.mins <= 25) reasons.push('Es tarde, mejor algo corto.')
   if (dish.mins <= 20) reasons.push(`Lista en ${dish.mins} minutos.`)
@@ -69,12 +95,12 @@ export function explain(dish, state, hour = new Date().getHours()) {
   if (reasons.length < 2) {
     reasons.push(`${dish.mins} minutos y ${dish.steps.length} pasos.`)
   }
-  return reasons.slice(0, 3)
+  return [...new Set(reasons)].slice(0, 3)
 }
 
 export function pickDinner(dishes, state, excludeId = null) {
   const hour = new Date().getHours()
-  let candidates = pool(dishes, state.prefs)
+  let candidates = pool(dishes, state.prefs, state.favorites)
   if (candidates.length > 1 && excludeId) {
     candidates = candidates.filter((dish) => dish.id !== excludeId)
   }
@@ -93,4 +119,20 @@ export function pickDinner(dishes, state, excludeId = null) {
   }
 
   return { dish: chosen, reasons: explain(chosen, state, hour) }
+}
+
+// Sugerencias estables (sin azar) para la sección "para ti".
+export function suggestions(dishes, state, limit = 3, favoritesOnly = false) {
+  const hour = new Date().getHours()
+  const source = favoritesOnly
+    ? dishes.filter((dish) => state.favorites.includes(dish.id))
+    : dishes
+  return source
+    .map((dish) => ({
+      dish,
+      weight: baseWeight(dish, state, hour),
+      reason: explain(dish, state, hour)[0],
+    }))
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, limit)
 }

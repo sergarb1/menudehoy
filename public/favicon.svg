@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="16" fill="#f8f3e6" />
-  <text
-    x="32"
-    y="45"
-    text-anchor="middle"
-    font-family="Verdana, sans-serif"
-    font-size="38"
-    font-weight="700"
-    fill="#22232a"
-  >
-    s
-  </text>
-  <rect x="16" y="49" width="32" height="5" rx="2.5" fill="#f2d43c" />
+  <rect width="64" height="64" rx="14" fill="#f8f3e6" />
+  <g transform="translate(4 4) scale(0.5833)" stroke="#22232a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M36 22c-4-4 3-7 0-11" opacity="0.55" />
+    <path d="M48 18c-4-4 3-7 0-11" opacity="0.55" />
+    <path d="M60 22c-4-4 3-7 0-11" opacity="0.55" />
+    <path d="M19 53c0-16 12-27 29-27s29 11 29 27-12 28-29 28S19 69 19 53Z" fill="#f8f3e6" />
+    <path d="M29 53c0-11 8-19 19-19s19 8 19 19-9 20-19 20-19-9-19-20Z" fill="#f2d43c" stroke-width="2.6" />
+    <circle cx="48" cy="53" r="7.5" fill="#f8f3e6" stroke="#d9b52f" stroke-width="2" />
+    <path d="M57 41c5-5 11-3 13 3-5 3-10 2-13-3Z" fill="#5f9e63" stroke-width="1.8" />
+    <path d="M8 25v14c0 3 2 5 5 5s5-2 5-5V25" />
+    <path d="M13 25v43M13 47v28" />
+    <path d="M88 24c-5 3-7 9-7 15 0 3 2 5 5 5h2v26" />
+  </g>
 </svg>

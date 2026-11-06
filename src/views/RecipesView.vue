@@ -13,6 +13,8 @@ const filters = [
   { value: 'cuchara', label: 'De cuchara' },
   { value: 'favoritas', label: 'Favoritas' },
   { value: 'nuevas', label: 'Sin probar' },
+  { value: 'super', label: 'De supermercado' },
+  { value: 'importadas', label: 'Importadas' },
   { value: 'vegetarianas', label: 'Vegetarianas' },
 ]
 
@@ -37,6 +39,8 @@ const list = computed(() => {
   let rows = dishes.filter((dish) => {
     if (active.value === 'favoritas' && !state.favorites.includes(dish.id)) return false
     if (active.value === 'nuevas' && state.cooked[dish.id]) return false
+    if (active.value === 'super' && !dish.tags.includes('supermercado')) return false
+    if (active.value === 'importadas' && !dish.external) return false
     if (active.value === 'vegetarianas' && !dish.veg) return false
     if (
       active.value === 'cuchara' &&
@@ -64,6 +68,11 @@ function clearAll() {
     <header class="page-head">
       <h1>Recetas</h1>
       <p class="lead">Las {{ dishes.length }} comidas de casa, con lo que les has puesto tú.</p>
+      <div class="actions--row">
+        <RouterLink class="btn btn--quiet btn--small" :to="{ name: 'importar' }">
+          Importar de TheMealDB
+        </RouterLink>
+      </div>
     </header>
 
     <div class="toolbar">
